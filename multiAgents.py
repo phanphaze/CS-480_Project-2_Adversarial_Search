@@ -75,16 +75,21 @@ class ReflexAgent(Agent):
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
         new_capsules = successorGameState.getCapsules()
 
-        print(f"Current position: {currentGameState.getPacmanPosition()}")
-        print(f"Position after action: {newPos}")
-        print(f"Remaining food positions: {newFood.asList()}")
-        print(f"Ghost scared timers: {newScaredTimes}")
+        # print(f"Current position: {currentGameState.getPacmanPosition()}")
+        # print(f"Position after action: {newPos}")
+        # print(f"Remaining food positions: {newFood.asList()}")
+        # print(f"Ghost scared timers: {newScaredTimes}")
 
-        for ghost in newGhostStates:
-            print(f"Ghost position: {ghost.getPosition()}")
+        # for ghost in newGhostStates:
+        #     print(f"Ghost position: {ghost.getPosition()}")
 
-        print(f"Successor score: {successorGameState.getScore()}")
+        # print(f"Successor score: {successorGameState.getScore()}")
 
+        # base cases
+        if successorGameState.isWin():
+            return float('inf')
+        if successorGameState.isLose():
+            return float('-inf')
 
         # scores food based on total distance to prioritise clusters
         food_score = 0
@@ -92,19 +97,32 @@ class ReflexAgent(Agent):
             food_score += 1/(manhattanDistance(newPos, food) + 1)
 
         capsules_score = 0
+        best_capsule_distance = float('inf')
+        for capsule in new_capsules:
+            capsule_dist = manhattanDistance(newPos, capsule)
+            if capsule_dist < best_capsule_distance:
+                best_capsule_distance = capsule_dist
+
+        capsules_score += 1/(best_capsule_distance + 1)
+        
         edible_ghost_score = 0
         ghost_danger_score = 0
 
         for ghost in newGhostStates:
             ghost_dist = manhattanDistance(newPos, ghost.getPosition())
-            if ghost_dist < ghost.scaredTimer:
-                # weigh by incresed score from food
-                edible_ghost_score += 20/(ghost_dist + 1)
-            else:
-                ghost_danger_score += 10/((ghost_dist + 1)**2)
-                for capsule in new_capsules:
-                    capsules_score += (manhattanDistance(newPos, capsule) + 1)
 
+            if ghost.scaredTimer > 0:
+                # reward chasing if catchable
+                if ghost_dist + 2 < ghost.scaredTimer:
+                    edible_ghost_score += 20 / (ghost_dist + 1)
+            else:
+                ghost_danger_score += 18 / ((ghost_dist + 0.1) ** 2)
+
+                # freak out if very close
+                if ghost_dist <= 1:
+                    ghost_danger_score += 100
+
+        
  
         total_score = successorGameState.getScore() + food_score + edible_ghost_score + capsules_score - ghost_danger_score
         return total_score
