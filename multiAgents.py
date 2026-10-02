@@ -193,8 +193,8 @@ class MinimaxAgent(MultiAgentSearchAgent):
             if state.isWin() or state.isLose() or depth == self.depth:
                 return self.evaluationFunction(state)
             
-            actions = gameState.getLegalActions(agentIndex)
-            next_agent = (agentIndex + 1) % gameState.getNumAgents()
+            actions = state.getLegalActions(agentIndex)
+            next_agent = (agentIndex + 1) % state.getNumAgents()
 
             # only calculates depth when pacman is next agent
             next_depth = depth + 1 if next_agent == 0 else depth
@@ -203,7 +203,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
             if agentIndex == 0:
                 best_score = float('-inf')
                 for action in actions:
-                    child = gameState.generateSuccessor(agentIndex, action)
+                    child = state.generateSuccessor(agentIndex, action)
                     score = minimax(child, next_agent, next_depth)
                     best_score = max(best_score, score)
                 return best_score
@@ -211,10 +211,30 @@ class MinimaxAgent(MultiAgentSearchAgent):
                 # minimize ghost score
                 worst_score = float('inf')
                 for action in actions:
-                    child = gameState.generateSuccessor(agentIndex, action)
+                    child = state.generateSuccessor(agentIndex, action)
                     score = minimax(child, next_agent, next_depth)
                     worst_score = min(worst_score, score)
                 return worst_score
+
+        best_action = Directions.STOP
+
+        # handles none or more ghost cases to always start with packman
+        next_agent = 1 % gameState.getNumAgents()
+        next_depth = 1 if next_agent == 0 else 0
+
+        best_score = float('-inf')
+        actions = gameState.getLegalActions(0)
+
+        for action in actions:
+            child = gameState.generateSuccessor(0, action)
+
+            minimax_score = minimax(child, next_agent, next_depth)
+
+            if minimax_score > best_score:
+                best_score = minimax_score
+                best_action = action
+
+        return best_action
 
 
         
