@@ -73,9 +73,41 @@ class ReflexAgent(Agent):
         newFood = successorGameState.getFood()
         newGhostStates = successorGameState.getGhostStates()
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
+        new_capsules = successorGameState.getCapsules()
 
-        "*** YOUR CODE HERE ***"
-        return successorGameState.getScore()
+        print(f"Current position: {currentGameState.getPacmanPosition()}")
+        print(f"Position after action: {newPos}")
+        print(f"Remaining food positions: {newFood.asList()}")
+        print(f"Ghost scared timers: {newScaredTimes}")
+
+        for ghost in newGhostStates:
+            print(f"Ghost position: {ghost.getPosition()}")
+
+        print(f"Successor score: {successorGameState.getScore()}")
+
+
+        # scores food based on total distance to prioritise clusters
+        food_score = 0
+        for food in newFood.asList():
+            food_score += 1/(manhattanDistance(newPos, food) + 1)
+
+        capsules_score = 0
+        edible_ghost_score = 0
+        ghost_danger_score = 0
+
+        for ghost in newGhostStates:
+            ghost_dist = manhattanDistance(newPos, ghost.getPosition())
+            if ghost_dist < ghost.scaredTimer:
+                # weigh by incresed score from food
+                edible_ghost_score += 20/(ghost_dist + 1)
+            else:
+                ghost_danger_score += 10/((ghost_dist + 1)**2)
+                for capsule in new_capsules:
+                    capsules_score += (manhattanDistance(newPos, capsule) + 1)
+
+ 
+        total_score = successorGameState.getScore() + food_score + edible_ghost_score + capsules_score - ghost_danger_score
+        return total_score
 
 def scoreEvaluationFunction(currentGameState: GameState):
     """
