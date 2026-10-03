@@ -383,7 +383,11 @@ def betterEvaluationFunction(currentGameState: GameState):
     Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
     evaluation function (question 5).
 
-    DESCRIPTION: <write something here so we know what you did>
+    DESCRIPTION: <The agent is evaluated based on the default game score, the food collected, the ghosts eaten, the capsules collected, its distance from the nearest ghost, the remaining food and the remaining capsules. 
+    Via trial and error I was able to regress to a stable configuration of hyperparameters that weigh each action. Initially I came across the problem of the packman being very active initially and the sit in a corner
+    until the ghost forced it to move. To solve this I weighed the food value inversly by the number of remaining food to make it more agressive and fearless to rush the final food. I did something simular with the 
+    capsules to ensure it didn't leave any potential points on the board. I reused most of my code from Q1 which I spent way to much time on, and then adjusted it further out of passion. This was such a fun exercise
+    that remidned me why I chose to go to college to study computer science and AI. >
     """
     "*** YOUR CODE HERE ***"
 
@@ -403,9 +407,7 @@ def betterEvaluationFunction(currentGameState: GameState):
     food_score = 0
 
     for food_pos in food:
-        # makes ghost more aggressively persue the final food on the map
-        food_weight = 30 / (len(food) + 1)
-        food_score += food_weight / (manhattanDistance(position, food_pos) + 1)
+        food_score += 20 / (manhattanDistance(position, food_pos) + 1)
 
     capsules_score = 0
     best_capsule_distance = float('inf')
@@ -425,8 +427,8 @@ def betterEvaluationFunction(currentGameState: GameState):
 
         if ghost.scaredTimer > 0:
             # reward chasing if catchable
-            if ghost_dist + 2 < ghost.scaredTimer:
-                edible_ghost_score += 20/(ghost_dist + 1)
+            if ghost_dist +3 < ghost.scaredTimer:
+                edible_ghost_score += 40/(ghost_dist + .1)
         else:
             ghost_danger_score += 6 /((ghost_dist + 0.1)**2)
 
