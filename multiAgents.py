@@ -386,7 +386,62 @@ def betterEvaluationFunction(currentGameState: GameState):
     DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    # base cases adapted for expectimax
+    if currentGameState.isWin():
+        return currentGameState.getScore() + 1000
+    if currentGameState.isLose():
+        return currentGameState.getScore() - 1000
+
+    position = currentGameState.getPacmanPosition()
+    food = currentGameState.getFood().asList()
+    ghosts = currentGameState.getGhostStates()
+    capsules = currentGameState.getCapsules()
+    score = currentGameState.getScore()
+
+    # scores food based on total distance to prioritise clusters
+    food_score = 0
+
+    for food_pos in food:
+        # makes ghost more aggressively persue the final food on the map
+        food_weight = 30 / (len(food) + 1)
+        food_score += food_weight / (manhattanDistance(position, food_pos) + 1)
+
+    capsules_score = 0
+    best_capsule_distance = float('inf')
+
+    for capsule in capsules:
+        capsule_dist = manhattanDistance(position, capsule)
+        if capsule_dist < best_capsule_distance:
+            best_capsule_distance = capsule_dist
+
+    capsules_score = 5 / (best_capsule_distance + 1)
+    
+    edible_ghost_score = 0
+    ghost_danger_score = 0
+
+    for ghost in ghosts:
+        ghost_dist = manhattanDistance(position, ghost.getPosition())
+
+        if ghost.scaredTimer > 0:
+            # reward chasing if catchable
+            if ghost_dist + 2 < ghost.scaredTimer:
+                edible_ghost_score += 20/(ghost_dist + 1)
+        else:
+            ghost_danger_score += 6 /((ghost_dist + 0.1)**2)
+
+            # freak out if very close
+            if ghost_dist <= 2:
+                ghost_danger_score += 100
+
+    # penalize remaining food to encourage eating
+    remaining_food_penalty = 4 * len(food)
+    remaining_capsule_penalty = 20 * len(capsules)
+
+    
+
+    total_score = score + food_score + edible_ghost_score + capsules_score - ghost_danger_score - remaining_food_penalty - remaining_capsule_penalty
+    return total_score
 
 # Abbreviation
 better = betterEvaluationFunction
