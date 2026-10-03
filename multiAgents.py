@@ -202,6 +202,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
             # maximize packman score
             if agentIndex == 0:
                 best_score = float('-inf')
+
                 for action in actions:
                     child = state.generateSuccessor(agentIndex, action)
                     score = minimax(child, next_agent, next_depth)
@@ -210,6 +211,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
             else:
                 # minimize ghost score
                 worst_score = float('inf')
+
                 for action in actions:
                     child = state.generateSuccessor(agentIndex, action)
                     score = minimax(child, next_agent, next_depth)
@@ -248,6 +250,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         """
         "*** YOUR CODE HERE ***"
         def alphaBeta(state, agentIndex, depth, alpha, beta):
+
             # base case
             if state.isWin() or state.isLose() or depth == self.depth:
                 return self.evaluationFunction(state)
@@ -303,6 +306,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             child = gameState.generateSuccessor(0, action)
 
             alphaBeta_score = alphaBeta(child, next_agent, next_depth, alpha, beta)
+
             if alphaBeta_score > best_value:
                 best_value = alphaBeta_score
                 best_action = action
@@ -323,7 +327,56 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        def expectimax(state, agentIndex, depth):
+        
+            # base case
+            if state.isWin() or state.isLose() or depth == self.depth:
+                return self.evaluationFunction(state)
+            
+            actions = state.getLegalActions(agentIndex)
+            next_agent = (agentIndex + 1) % state.getNumAgents()
+
+            # only calculates depth when pacman is next agent
+            next_depth = depth + 1 if next_agent == 0 else depth
+
+            # maximize packman score
+            if agentIndex == 0:
+                best_score = float('-inf')
+
+                for action in actions:
+                    child = state.generateSuccessor(agentIndex, action)
+                    score = expectimax(child, next_agent, next_depth)
+                    best_score = max(best_score, score)
+                return best_score
+            else:
+                # expected packman score under random ghost actions
+                total_score = 0
+
+                for action in actions:
+                    child = state.generateSuccessor(agentIndex, action)
+                    score = expectimax(child, next_agent, next_depth)
+                    total_score += score
+                return total_score / len(actions)
+
+        best_action = Directions.STOP
+
+        # handles none or more ghost cases to always start with packman
+        next_agent = 1 % gameState.getNumAgents()
+        next_depth = 1 if next_agent == 0 else 0
+
+        best_score = float('-inf')
+        actions = gameState.getLegalActions(0)
+
+        for action in actions:
+            child = gameState.generateSuccessor(0, action)
+
+            expectimax_score = expectimax(child, next_agent, next_depth)
+
+            if expectimax_score > best_score:
+                best_score = expectimax_score
+                best_action = action
+
+        return best_action
 
 def betterEvaluationFunction(currentGameState: GameState):
     """
